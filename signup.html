@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Sign Up - Expense Tracker</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <section class="auth-section">
+
+    <div class="auth-card">
+
+      <h1>Create Account</h1>
+
+      <p class="auth-subtitle">
+        Create an account to get started.
+      </p>
+
+
+      <form id="signupForm">
+
+        <div class="form-group">
+
+          <label for="email">
+            Email
+          </label>
+
+          <input
+            type="email"
+            id="email"
+            placeholder="Email address"
+            required
+          >
+
+        </div>
+
+
+        <div class="form-group">
+
+          <label for="password">
+            Password
+          </label>
+
+          <input
+            type="password"
+            id="password"
+            placeholder="Create a password"
+            required
+          >
+
+        </div>
+
+        <br>
+
+        <button
+          type="submit"
+          class="btn-primary"
+          id="signupButton"
+        >
+          Sign Up
+        </button>
+
+      </form>
+
+
+      <p id="authMessage" class="auth-message"></p>
+
+
+      <a href="index.html" class="auth-toggle">
+        Already have an account? Login
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/signup.js"></script>
+
+</body>
+
+</html>

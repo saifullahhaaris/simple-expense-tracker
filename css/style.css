@@ -1,0 +1,649 @@
+/* ========================================
+   RESET
+======================================== */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+
+/* ========================================
+   VARIABLES
+======================================== */
+
+:root {
+  --background: #f5f5f5;
+  --surface: #ffffff;
+
+  --text: #171717;
+  --text-secondary: #737373;
+
+  --border: #e5e5e5;
+
+  --primary: #171717;
+  --primary-hover: #303030;
+
+  --income: #15803d;
+  --expense: #dc2626;
+
+  --radius: 12px;
+}
+
+
+/* ========================================
+   BODY
+======================================== */
+
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+
+  background: var(--background);
+  color: var(--text);
+
+  min-height: 100vh;
+}
+
+
+/* ========================================
+   APP
+======================================== */
+
+.app {
+  width: 100%;
+  max-width: 1000px;
+
+  margin: 0 auto;
+  padding: 40px 24px;
+}
+
+
+/* ========================================
+   HEADER
+======================================== */
+
+.header {
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+
+  margin-bottom: 6px;
+}
+
+.header p {
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+
+/* ========================================
+   SUMMARY
+======================================== */
+
+.summary {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 16px;
+
+  margin-bottom: 20px;
+}
+
+
+.summary-card {
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  padding: 20px;
+
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+
+.summary-label {
+  display: block;
+
+  color: var(--text-secondary);
+
+  font-size: 13px;
+
+  margin-bottom: 8px;
+}
+
+
+.summary-card h2 {
+  font-size: 24px;
+
+  font-weight: 650;
+
+  letter-spacing: -0.3px;
+}
+
+
+/* ========================================
+   CARD
+======================================== */
+
+.card {
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  margin-bottom: 20px;
+
+  overflow: hidden;
+
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+
+/* ========================================
+   CARD HEADER
+======================================== */
+
+.card-header {
+  padding: 20px;
+
+  border-bottom: 1px solid var(--border);
+}
+
+
+.card-header h2 {
+  font-size: 18px;
+
+  margin-bottom: 5px;
+}
+
+
+.card-header p {
+  color: var(--text-secondary);
+
+  font-size: 13px;
+}
+
+
+/* ========================================
+   FORM
+======================================== */
+
+#transactionForm {
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    2fr
+    1fr
+    1fr
+    auto;
+
+  gap: 12px;
+
+  align-items: end;
+
+  padding: 20px;
+}
+
+
+.form-group {
+  display: flex;
+
+  flex-direction: column;
+}
+
+
+.form-group label {
+  font-size: 12px;
+
+  color: var(--text-secondary);
+
+  margin-bottom: 6px;
+}
+
+
+.form-group input,
+.form-group select {
+  width: 100%;
+
+  height: 42px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 8px;
+
+  padding: 0 11px;
+
+  font: inherit;
+
+  color: var(--text);
+
+  background: var(--surface);
+
+  outline: none;
+}
+
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #a3a3a3;
+
+  box-shadow:
+    0 0 0 3px rgba(0, 0, 0, 0.04);
+}
+
+
+/* ========================================
+   BUTTON
+======================================== */
+
+.btn-primary {
+  height: 42px;
+
+  padding: 0 16px;
+
+  border: 1px solid var(--primary);
+
+  border-radius: 8px;
+
+  background: var(--primary);
+
+  color: #ffffff;
+
+  font: inherit;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  transition:
+    background 0.15s ease,
+    transform 0.05s ease;
+}
+
+
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+
+
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+
+/* ========================================
+   TABLE
+======================================== */
+
+.table-container {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+
+table {
+  width: 100%;
+
+  border-collapse: collapse;
+}
+
+
+thead {
+  background: #fafafa;
+}
+
+
+th {
+  padding: 13px 20px;
+
+  text-align: left;
+
+  font-size: 12px;
+
+  font-weight: 600;
+
+  color: var(--text-secondary);
+
+  border-bottom: 1px solid var(--border);
+
+  white-space: nowrap;
+}
+
+
+td {
+  padding: 14px 20px;
+
+  font-size: 14px;
+
+  border-bottom: 1px solid var(--border);
+
+  white-space: nowrap;
+}
+
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+
+tbody tr:hover {
+  background: #fafafa;
+}
+
+
+/* ========================================
+   TRANSACTION TYPE
+======================================== */
+
+.income {
+  color: var(--income);
+
+  font-weight: 600;
+}
+
+
+.expense {
+  color: var(--expense);
+
+  font-weight: 600;
+}
+
+
+/* ========================================
+   DELETE BUTTON
+======================================== */
+
+.delete-btn {
+  border: none;
+
+  background: transparent;
+
+  color: var(--text-secondary);
+
+  cursor: pointer;
+
+  font-size: 13px;
+
+  padding: 5px 8px;
+
+  border-radius: 6px;
+}
+
+
+.delete-btn:hover {
+  background: #fef2f2;
+
+  color: var(--expense);
+}
+
+
+/* ========================================
+   EMPTY STATE
+======================================== */
+
+.empty-state {
+  text-align: center;
+
+  padding: 50px 20px;
+
+  color: var(--text-secondary);
+}
+
+
+.empty-state p {
+  font-size: 15px;
+
+  margin-bottom: 5px;
+
+  color: var(--text);
+}
+
+
+.empty-state span {
+  font-size: 13px;
+}
+
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 800px) {
+
+  .app {
+    padding: 25px 16px;
+  }
+
+
+  #transactionForm {
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+
+  #transactionForm .form-group:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+
+  #transactionForm .btn-primary {
+    grid-column: 1 / -1;
+
+    width: 100%;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+
+  .header h1 {
+    font-size: 26px;
+  }
+
+
+  #transactionForm {
+    grid-template-columns: 1fr;
+  }
+
+
+  #transactionForm .form-group:nth-child(2) {
+    grid-column: auto;
+  }
+
+
+  #transactionForm .btn-primary {
+    grid-column: auto;
+  }
+
+
+  .card-header {
+    padding: 16px;
+  }
+
+
+  th,
+  td {
+    padding: 12px 14px;
+  }
+
+}
+
+/* ========================================
+   THEME TOGGLE
+======================================== */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+
+.theme-toggle {
+  height: 36px;
+
+  padding: 0 12px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 8px;
+
+  background: var(--surface);
+
+  color: var(--text);
+
+  font: inherit;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+}
+
+
+.theme-toggle:hover {
+  background: var(--background);
+}
+
+/* =========================
+   Dark Theme
+========================= */
+
+[data-theme="dark"] {
+  --background: #111111;
+  --surface: #1a1a1a;
+  --text: #f5f5f5;
+  --text-secondary: #a3a3a3;
+  --border: #333333;
+  --primary: #f5f5f5;
+  --primary-hover: #d4d4d4;
+  --income: #4ade80;
+  --expense: #f87171;
+}
+
+[data-theme="dark"] .btn-primary {
+  color: #111111;
+}
+
+[data-theme="dark"] thead {
+  background: #151515;
+}
+
+[data-theme="dark"] tbody tr:hover {
+  background: #222222;
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+  background: #222222;
+}
+
+/* =========================
+   Authentication
+========================= */
+
+.auth-section {
+  min-height: 100vh;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  padding: 32px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.auth-card h1 {
+  margin-bottom: 8px;
+}
+
+.auth-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+}
+
+.auth-message {
+  min-height: 20px;
+
+  margin-top: 16px;
+
+  font-size: 14px;
+}
+
+.auth-toggle {
+  display: block;
+
+  margin: 20px auto 0;
+
+  border: none;
+
+  background: none;
+
+  color: var(--text);
+
+  font: inherit;
+
+  font-size: 14px;
+
+  cursor: pointer;
+}
+
+.auth-toggle:hover {
+  text-decoration: underline;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+[data-theme="dark"] .auth-card {
+  box-shadow: none;
+}
