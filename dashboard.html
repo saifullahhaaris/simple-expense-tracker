@@ -1,8 +1,10 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
+
   <meta charset="UTF-8">
+
   <meta
     name="viewport"
     content="width=device-width, initial-scale=1.0"
@@ -10,42 +12,61 @@
 
   <title>Expense Tracker</title>
 
-  <link rel="stylesheet" href="css/style.css">
+  <link
+    rel="stylesheet"
+    href="css/style.css"
+  >
+
 </head>
+
 
 <body>
 
-  <div class="app" id="appSection">
+  <div class="app">
+
 
     <!-- =========================
          Header
     ========================== -->
 
-    <header class="header">
+    <header>
 
       <div>
-        <h1>Expense Tracker</h1>
+
+        <h1>
+          Expense Tracker
+        </h1>
 
         <p class="subtitle">
-          Track your income and expenses simply.
+          Just record money in and money out.
         </p>
+
       </div>
 
 
       <div class="header-actions">
 
         <button
-          id="themeToggle"
-          class="theme-toggle"
           type="button"
+          id="chartButton"
+          class="header-button"
+        >
+          Charts
+        </button>
+
+
+        <button
+          type="button"
+          id="themeToggle"
+          class="header-button theme-toggle"
         >
           Dark
         </button>
 
+
         <button
-          id="logoutButton"
-          class="btn-secondary"
           type="button"
+          id="logoutButton"
         >
           Logout
         </button>
@@ -59,275 +80,8 @@
          Summary
     ========================== -->
 
-    <section class="summary-grid">
-
-      <div class="summary-card">
-
-        <span class="summary-label">
-          Income
-        </span>
-
-        <h2 id="totalIncome">
-          Rs. 0.00
-        </h2>
-
-      </div>
-
-
-      <div class="summary-card">
-
-        <span class="summary-label">
-          Expenses
-        </span>
-
-        <h2 id="totalExpense">
-          Rs. 0.00
-        </h2>
-
-      </div>
-
-
-      <div class="summary-card">
-
-        <span class="summary-label">
-          Balance
-        </span>
-
-        <h2 id="balance">
-          Rs. 0.00
-        </h2>
-
-      </div>
-
-    </section>
-
-
-    <!-- =========================
-         Add Transaction
-    ========================== -->
-
-    <section class="card">
-
-      <h2>Add Transaction</h2>
-
-      <p class="section-description">
-        Record your income or expense.
-      </p>
-
-
-      <form id="transactionForm">
-
-        <div class="form-grid">
-
-          <div class="form-group">
-
-            <label for="date">
-              Date
-            </label>
-
-            <input
-              type="date"
-              id="date"
-              required
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="description">
-              Description
-            </label>
-
-            <input
-              type="text"
-              id="description"
-              placeholder="e.g. Salary"
-              required
-            >
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="type">
-              Type
-            </label>
-
-            <select id="type">
-
-              <option value="expense">
-                Expense
-              </option>
-
-              <option value="income">
-                Income
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <div class="form-group">
-
-            <label for="amount">
-              Amount
-            </label>
-
-            <input
-              type="number"
-              id="amount"
-              placeholder="0.00"
-              min="0.01"
-              step="0.01"
-              required
-            >
-
-          </div>
-
-        </div>
-
-
-        <button
-          type="submit"
-          class="btn-primary"
-        >
-          Add Transaction
-        </button>
-
-      </form>
-
-    </section>
-
-
-    <!-- =========================
-         Transactions
-    ========================== -->
-
-    <section class="card">
-
-      <h2>Transactions</h2>
-
-      <p class="section-description">
-        Your recent income and expenses.
-      </p>
-
-
-      <div class="table-container">
-
-        <table>
-
-          <thead>
-
-            <tr>
-
-              <th>Date</th>
-
-              <th>Description</th>
-
-              <th>Type</th>
-
-              <th>Amount</th>
-
-              <th>Action</th>
-
-            </tr>
-
-          </thead>
-
-
-          <tbody id="transactionList">
-          </tbody>
-
-        </table>
-
-      </div>
-
-
-      <div
-        id="emptyState"
-        class="empty-state"
-      >
-
-        <p>No transactions yet.</p>
-
-        <span>
-          Add your first transaction above.
-        </span>
-
-      </div>
-
-    </section>
-
-  </div>
-
-
-  <!-- Supabase -->
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <script src="js/supabase.js"></script>
-
-  <script src="js/utils.js"></script>
-
-  <script src="js/storage.js"></script>
-
-  <script src="js/dashboard.js"></script>
-
-</body>
-
-</html> -->
-
-
-
-
-
-
-
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>Expense Tracker</title>
-
-  <link rel="stylesheet" href="css/style.css">
-</head>
-
-<body>
-
-  <div class="app">
-
-    <!-- Header -->
-
-    <header>
-
-      <div>
-        <h1>Expense Tracker</h1>
-
-        <p class="subtitle">
-          Just record money in and money out.
-        </p>
-      </div>
-
-      <button
-        type="button"
-        id="logoutButton"
-      >
-        Logout
-      </button>
-
-    </header>
-
-
-    <!-- Summary -->
-
     <section class="summary">
+
 
       <div class="card">
 
@@ -376,19 +130,43 @@
 
       </div>
 
+
     </section>
 
 
-    <!-- Add Transaction -->
+    <!-- =========================
+         Add Transaction
+    ========================== -->
 
     <section class="panel">
+
+
+      <div class="panel-header">
+
+        <div>
+
+          <h2 id="formTitle">
+            Add Transaction
+          </h2>
+
+          <p id="formSubtitle">
+            Record your income or expense.
+          </p>
+
+        </div>
+
+      </div>
+
 
       <form
         class="form"
         id="entryForm"
       >
 
-        <div>
+
+        <!-- Date -->
+
+        <div class="form-group">
 
           <label for="date">
             Date
@@ -403,7 +181,9 @@
         </div>
 
 
-        <div class="description-field">
+        <!-- Description -->
+
+        <div class="form-group">
 
           <label for="description">
             Description
@@ -420,13 +200,104 @@
         </div>
 
 
-        <div>
+        <!-- Category -->
+
+        <div class="form-group">
+
+          <label for="category">
+            Category
+          </label>
+
+
+          <select
+            id="category"
+            required
+          >
+
+            <option value="">
+              Select category
+            </option>
+
+            <option value="Food">
+              Food
+            </option>
+
+            <option value="Transport">
+              Transport
+            </option>
+
+            <option value="Bills">
+              Bills
+            </option>
+
+            <option value="Shopping">
+              Shopping
+            </option>
+
+            <option value="Entertainment">
+              Entertainment
+            </option>
+
+            <option value="Health">
+              Health
+            </option>
+
+            <option value="Education">
+              Education
+            </option>
+
+            <option value="Other">
+              Other
+            </option>
+
+            <option value="__custom__">
+              + Create new category
+            </option>
+
+          </select>
+
+
+          <!-- Custom category -->
+
+          <div
+            id="newCategoryBox"
+            class="new-category-box"
+            hidden
+          >
+
+            <input
+              type="text"
+              id="customCategory"
+              placeholder="Enter your category"
+              maxlength="60"
+            >
+
+
+            <button
+              type="button"
+              id="createCategoryButton"
+              class="secondary"
+            >
+              Create
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- Type -->
+
+        <div class="form-group">
 
           <label for="type">
             Type
           </label>
 
-          <select id="type">
+          <select
+            id="type"
+            required
+          >
 
             <option value="expense">
               Expense
@@ -441,7 +312,9 @@
         </div>
 
 
-        <div>
+        <!-- Amount -->
+
+        <div class="form-group">
 
           <label for="amount">
             Amount
@@ -460,33 +333,54 @@
         </div>
 
 
+        <!-- Buttons -->
+
         <div class="add-field">
 
           <button
             class="primary"
             type="submit"
+            id="submitButton"
           >
-            Add
+            Add Transaction
+          </button>
+
+
+          <button
+            class="secondary"
+            type="button"
+            id="cancelButton"
+            hidden
+          >
+            Cancel
           </button>
 
         </div>
+
 
       </form>
 
     </section>
 
 
-    <!-- Transactions -->
+    <!-- =========================
+         Transactions
+    ========================== -->
 
     <section class="panel">
 
-      <div class="toolbar">
 
-        <div class="toolbar-left">
+      <div class="panel-header">
 
-          <span class="hint">
-            Your transactions are stored securely in your account.
-          </span>
+        <div>
+
+          <h2>
+            Transactions
+          </h2>
+
+          <p>
+            Your recent income and expenses.
+          </p>
 
         </div>
 
@@ -494,6 +388,7 @@
 
 
       <div class="table-wrap">
+
 
         <table>
 
@@ -509,27 +404,33 @@
                 Description
               </th>
 
-              <th class="num">
+              <th>
+                Category
+              </th>
+
+              <th>
                 Income
               </th>
 
-              <th class="num">
+              <th>
                 Expense
               </th>
 
-              <th class="num">
+              <th>
                 Balance
               </th>
 
-              <th></th>
+              <th>
+                Action
+              </th>
 
             </tr>
 
           </thead>
 
 
-          <tbody id="ledger">
-          </tbody>
+          <tbody id="ledger"></tbody>
+
 
         </table>
 
@@ -538,17 +439,27 @@
           class="empty"
           id="empty"
         >
-          No entries yet.
+
+          No transactions yet.
+
+          <br>
+
+          Add your first transaction above.
+
         </div>
+
 
       </div>
 
     </section>
 
+
   </div>
 
 
-  <!-- Supabase -->
+  <!-- =========================
+       Supabase
+  ========================== -->
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 

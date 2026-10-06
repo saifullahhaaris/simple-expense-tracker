@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Expense Charts</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <div class="app">
+
+    <header>
+      <div>
+        <h1>Expense Charts</h1>
+        <p class="subtitle">Understand where your money is going.</p>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" id="dashboardButton" class="header-button">
+          Dashboard
+        </button>
+
+        <button type="button" id="themeToggle" class="header-button theme-toggle">
+          Dark
+        </button>
+
+        <button type="button" id="logoutButton" class="header-button">
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <section class="chart-periods" aria-label="Chart period">
+      <button type="button" class="period-button active" data-period="daily">Daily</button>
+      <button type="button" class="period-button" data-period="weekly">Weekly</button>
+      <button type="button" class="period-button" data-period="monthly">Monthly</button>
+    </section>
+
+    <section class="chart-grid">
+      <article class="chart-card">
+        <div class="chart-card-header category-header">
+          <div>
+            <h2 id="categoryChartTitle">Spending by Category</h2>
+            <p>See how your spending is divided between your categories.</p>
+          </div>
+          <label class="month-selector">
+            <span>Month</span>
+            <select id="categoryMonth"></select>
+          </label>
+        </div>
+        <div class="chart-container category-chart-container">
+          <canvas id="categoryChart"></canvas>
+        </div>
+        <p id="categoryEmpty" class="chart-empty" hidden>No expense data for this month.</p>
+      </article>
+
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h2 id="trendTitle">Daily Expenses</h2>
+            <p>How much you spent over time.</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="expenseTrendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h2>Where You Spend Most</h2>
+            <p>Your biggest expense descriptions.</p>
+          </div>
+        </div>
+        <div class="chart-container chart-container-small">
+          <canvas id="topExpensesChart"></canvas>
+        </div>
+        <div id="chartEmpty" class="empty chart-empty" hidden>
+          Add some expense transactions to see your spending patterns.
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/charts.js"></script>
+
+</body>
+
+</html>
