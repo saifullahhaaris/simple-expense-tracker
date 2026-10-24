@@ -1014,3 +1014,212 @@ tbody tr:hover {
 #signupButton:hover {
   opacity: 0.85;
 }
+
+/* ========================================
+   FINANCIAL PERIOD SETTINGS
+======================================== */
+
+.financial-period-panel {
+  padding: 16px 20px;
+}
+
+.financial-period-toolbar,
+.period-navigation,
+.financial-setting-row,
+.chart-range-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.financial-period-toolbar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.period-navigation {
+  justify-content: flex-start;
+}
+
+.period-current {
+  text-align: center;
+  min-width: 190px;
+}
+
+.period-current h2 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.period-current p,
+.form-help,
+.chart-range-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.financial-settings summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.financial-settings-content {
+  min-width: 260px;
+  padding-top: 12px;
+}
+
+.financial-settings-content label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.financial-setting-row select {
+  flex: 1;
+  min-width: 0;
+}
+
+.form-help {
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.notes-field {
+  grid-column: 1 / -1;
+}
+
+.notes-field textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 68px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.transaction-note {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: normal;
+  max-width: 300px;
+}
+
+.chart-range-panel {
+  padding: 16px 20px;
+}
+
+.chart-range-controls {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr auto;
+  align-items: end;
+}
+
+.chart-range-controls .form-group {
+  min-width: 0;
+}
+
+.chart-range-controls .primary {
+  height: 42px;
+}
+
+.chart-range-label {
+  margin-top: 10px;
+}
+
+@media (max-width: 800px) {
+  .chart-range-controls {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .chart-range-controls .form-group:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .chart-range-controls .primary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .financial-period-panel,
+  .chart-range-panel {
+    padding: 14px;
+  }
+
+  .financial-period-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .period-navigation {
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .period-navigation .secondary {
+    padding: 0 10px;
+  }
+
+  .period-current {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .financial-settings-content {
+    min-width: 0;
+  }
+
+  .chart-range-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-range-controls .form-group:first-child {
+    grid-column: auto;
+  }
+}
+
+
+/* Bottom navigation shared by all app pages */
+body { padding-bottom: 88px; }
+.bottom-nav { position: fixed; z-index: 1000; left: 50%; bottom: 0; transform: translateX(-50%); width: min(100%, 760px); display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: var(--surface); border: 1px solid var(--border); border-bottom: 0; border-radius: 18px 18px 0 0; box-shadow: 0 -6px 24px rgba(0,0,0,.06); }
+.nav-item { display: flex; min-width: 0; align-items: center; justify-content: center; flex-direction: column; gap: 3px; padding: 7px 4px; color: var(--text-secondary); text-decoration: none; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.nav-icon { font-size: 23px; line-height: 1.1; }
+.nav-item.active { color: var(--text); background: var(--background); }
+.header-status { display: flex; justify-content: flex-end; }
+.sync-status { display: inline-flex; align-items: center; min-height: 32px; padding: 6px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); color: var(--text-secondary); font-size: 12px; white-space: nowrap; }
+.sync-status[data-status="synced"] { color: var(--income); }
+.sync-status[data-status="offline"], .sync-status[data-status="pending"] { color: #a16207; }
+.notes-app { max-width: 1000px; }
+.note-form { display: grid; gap: 14px; }
+.note-form textarea { resize: vertical; min-height: 120px; }
+.note-editor-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.pin-choice { display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 14px; }
+.notes-list-section { margin-top: 26px; }
+.notes-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.sticky-note { display: flex; flex-direction: column; min-height: 210px; padding: 18px; border-radius: 8px 8px 16px 8px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,.04); overflow-wrap: anywhere; }
+.sticky-note h3 { font-size: 17px; margin-bottom: 10px; }
+.sticky-note-content { flex: 1; white-space: pre-wrap; line-height: 1.5; font-size: 14px; }
+.sticky-note-date { margin-top: 14px; margin-bottom: 12px; color: var(--text-secondary); font-size: 11px; }
+.sticky-note-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.sticky-note-actions button { height: 34px; padding: 0 10px; font-size: 12px; }
+.note-yellow { background: #fff8cf; color: #433d20; border-color: #f0e4a4; }
+.note-blue { background: #e3f2ff; color: #18354d; border-color: #c2e2ff; }
+.note-pink { background: #ffe6ed; color: #542b38; border-color: #ffd0dc; }
+.note-green { background: #e3f6e8; color: #1e4329; border-color: #c5e8ce; }
+[data-theme="dark"] .note-yellow { background: #4a4323; color: #fff4b8; border-color: #6b6030; }
+[data-theme="dark"] .note-blue { background: #203d54; color: #d5ecff; border-color: #315a78; }
+[data-theme="dark"] .note-pink { background: #4d2b37; color: #ffe0e8; border-color: #754354; }
+[data-theme="dark"] .note-green { background: #24432e; color: #d9f8df; border-color: #356443; }
+.danger-outline { color: var(--expense) !important; }
+.projects-coming-soon { max-width: 620px; margin: 40px auto; text-align: center; padding: 36px 24px; }
+.projects-coming-soon h2 { margin: 12px 0; }
+.projects-coming-soon p { margin: 12px auto; line-height: 1.6; }
+.project-placeholder-icon { display: grid; place-items: center; width: 64px; height: 64px; margin: 0 auto; border-radius: 18px; background: var(--background); font-size: 32px; }
+.inline-link { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; margin-top: 10px; }
+@media (max-width: 760px) { .notes-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } header { align-items: center; } }
+@media (max-width: 520px) { body { padding-bottom: 82px; } .app { padding: 24px 14px 28px; } header { gap: 8px; } header h1 { font-size: 25px; } .sync-status { font-size: 10px; padding: 5px 7px; } .notes-grid { grid-template-columns: 1fr; } .note-editor-actions { align-items: flex-start; flex-direction: column; } .bottom-nav { padding-left: 6px; padding-right: 6px; } .nav-item { font-size: 10px; } }

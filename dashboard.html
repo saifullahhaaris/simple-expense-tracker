@@ -45,36 +45,40 @@
 
 
       <div class="header-actions">
-
-        <button
-          type="button"
-          id="chartButton"
-          class="header-button"
-        >
-          Charts
-        </button>
-
-
-        <button
-          type="button"
-          id="themeToggle"
-          class="header-button theme-toggle"
-        >
-          Dark
-        </button>
-
-
-        <button
-          type="button"
-          id="logoutButton"
-        >
-          Logout
-        </button>
-
+        <button type="button" id="themeToggle" class="header-button theme-toggle">Dark</button>
+        <button type="button" id="logoutButton" class="header-button">Logout</button>
+        <span id="syncStatus" class="sync-status" role="status">Checking sync…</span>
       </div>
-
     </header>
 
+
+    <!-- =========================
+         Financial period controls
+    ========================== -->
+
+    <section class="panel financial-period-panel">
+      <div class="financial-period-toolbar">
+        <div class="period-navigation">
+          <button type="button" id="previousPeriodButton" class="secondary" aria-label="Previous financial period">Previous</button>
+          <div class="period-current">
+            <h2 id="financialPeriodTitle">Financial period</h2>
+            <p id="financialPeriodDates" class="subtitle">Loading period…</p>
+          </div>
+          <button type="button" id="nextPeriodButton" class="secondary" aria-label="Next financial period">Next</button>
+        </div>
+        <details class="financial-settings">
+          <summary>Financial month settings</summary>
+          <div class="financial-settings-content">
+            <label for="financialStartDay">My financial month starts on</label>
+            <div class="financial-setting-row">
+              <select id="financialStartDay"></select>
+              <button type="button" id="saveFinancialSettingsButton" class="secondary">Save</button>
+            </div>
+            <p class="form-help">For example, choosing 25 shows the 25th through the 24th of the next month.</p>
+          </div>
+        </details>
+      </div>
+    </section>
 
     <!-- =========================
          Summary
@@ -198,8 +202,6 @@
           >
 
         </div>
-
-
         <!-- Category -->
 
         <div class="form-group">
@@ -378,8 +380,8 @@
             Transactions
           </h2>
 
-          <p>
-            Your recent income and expenses.
+          <p id="transactionPeriodSubtitle">
+            Transactions for the selected financial period.
           </p>
 
         </div>
@@ -456,6 +458,12 @@
 
   </div>
 
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="dashboard.html" class="nav-item active" aria-current="page"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
+    <a href="projects.html" class="nav-item"><span class="nav-icon">▦</span><span>Projects</span></a>
+    <a href="notes.html" class="nav-item"><span class="nav-icon">▤</span><span>Notes</span></a>
+    <a href="charts.html" class="nav-item"><span class="nav-icon">▥</span><span>Charts</span></a>
+  </nav>
 
   <!-- =========================
        Supabase
@@ -468,7 +476,7 @@
   <script src="js/utils.js"></script>
 
   <script src="js/storage.js"></script>
-
+  <script src="js/offline.js"></script>
   <script src="js/dashboard.js"></script>
 
 </body>

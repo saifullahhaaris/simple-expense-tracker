@@ -15,7 +15,6 @@ const balance = document.getElementById("balance");
 
 const logoutButton = document.getElementById("logoutButton");
 const themeToggle = document.getElementById("themeToggle");
-const chartButton = document.getElementById("chartButton");
 
 const submitButton = document.getElementById("submitButton");
 const cancelButton = document.getElementById("cancelButton");
@@ -31,9 +30,18 @@ const customCategoryInput =
 
 const createCategoryButton =
   document.getElementById("createCategoryButton");
+const previousPeriodButton = document.getElementById("previousPeriodButton");
+const nextPeriodButton = document.getElementById("nextPeriodButton");
+const financialPeriodTitle = document.getElementById("financialPeriodTitle");
+const financialPeriodDates = document.getElementById("financialPeriodDates");
+const transactionPeriodSubtitle = document.getElementById("transactionPeriodSubtitle");
+const financialStartDaySelect = document.getElementById("financialStartDay");
+const saveFinancialSettingsButton = document.getElementById("saveFinancialSettingsButton");
 
 let editingTransactionId = null;
 let transactionsCache = [];
+let financialStartDay = 1;
+let selectedPeriodStart = null;
 
 
 // =========================
@@ -102,6 +110,77 @@ function startEditing(transaction) {
     behavior: "smooth"
   });
 }
+
+
+// =========================
+// Financial period controls
+// =========================
+
+function getCurrentFinancialPeriod() {
+  return getFinancialPeriodForDate(getToday(), financialStartDay);
+}
+
+function getSelectedFinancialPeriod() {
+  return getFinancialPeriodForDate(selectedPeriodStart || getToday(), financialStartDay);
+}
+
+function renderSelectedPeriod() {
+  const period = getSelectedFinancialPeriod();
+  selectedPeriodStart = period.start;
+
+  financialPeriodTitle.textContent = "Financial period";
+  financialPeriodDates.textContent = formatDateRange(period.start, period.end);
+  transactionPeriodSubtitle.textContent = `Transactions from ${formatDate(period.start)} to ${formatDate(period.end)}.`;
+
+  const periodTransactions = transactionsCache.filter(transaction =>
+    transaction.date >= period.start && transaction.date <= period.end
+  );
+
+  renderTransactions(periodTransactions);
+}
+
+function populateFinancialStartDays() {
+  financialStartDaySelect.innerHTML = "";
+
+  for (let day = 1; day <= 31; day++) {
+    const option = document.createElement("option");
+    option.value = String(day);
+    option.textContent = `${day}${day === 1 ? "st" : day === 2 ? "nd" : day === 3 ? "rd" : "th"} of each month`;
+    financialStartDaySelect.appendChild(option);
+  }
+
+  financialStartDaySelect.value = String(financialStartDay);
+}
+
+previousPeriodButton.addEventListener("click", () => {
+  selectedPeriodStart = shiftFinancialPeriod(getSelectedFinancialPeriod().start, financialStartDay, -1);
+  renderSelectedPeriod();
+});
+
+nextPeriodButton.addEventListener("click", () => {
+  selectedPeriodStart = shiftFinancialPeriod(getSelectedFinancialPeriod().start, financialStartDay, 1);
+  renderSelectedPeriod();
+});
+
+saveFinancialSettingsButton.addEventListener("click", async () => {
+  const previousDay = financialStartDay;
+  const nextDay = Number(financialStartDaySelect.value);
+  saveFinancialSettingsButton.disabled = true;
+
+  try {
+    await saveFinancialStartDay(nextDay);
+    financialStartDay = nextDay;
+    selectedPeriodStart = getCurrentFinancialPeriod().start;
+    renderSelectedPeriod();
+    alert("Financial month settings saved.");
+  } catch (error) {
+    console.error("Could not save financial month settings:", error);
+    financialStartDaySelect.value = String(previousDay);
+    alert(error.message || "Could not save financial month settings.");
+  } finally {
+    saveFinancialSettingsButton.disabled = false;
+  }
+});
 
 
 // =========================
@@ -197,10 +276,8 @@ function renderTransactions(transactions) {
       </td>
 
       <td>
-        ${escapeHtml(
-          transaction.description
-        )}
-      </td>
+        <div>${escapeHtml(transaction.description)}</div>
+              </td>
 
       <td>
         ${escapeHtml(
@@ -273,9 +350,11 @@ async function loadTransactions() {
     transactionsCache =
       await getTransactions();
 
-    renderTransactions(
-      transactionsCache
-    );
+    if (!selectedPeriodStart) {
+      selectedPeriodStart = getCurrentFinancialPeriod().start;
+    }
+
+    renderSelectedPeriod();
 
   } catch (error) {
 
@@ -702,18 +781,6 @@ themeToggle.addEventListener(
 );
 
 
-// =========================
-// Charts
-// =========================
-
-chartButton.addEventListener(
-  "click",
-  () => {
-    window.location.href =
-      "charts.html";
-  }
-);
-
 
 // =========================
 // Logout
@@ -722,6 +789,13 @@ chartButton.addEventListener(
 logoutButton.addEventListener(
   "click",
   async () => {
+
+    try {
+      const pendingCount = await getPendingSyncCount();
+      if (pendingCount > 0 && !confirm(`${pendingCount} change(s) are waiting to sync. They will remain on this device and sync after you sign in again. Log out anyway?`)) return;
+    } catch (error) {
+      console.warn("Could not check pending sync changes:", error);
+    }
 
     const { error } =
       await supabaseClient.auth.signOut();
@@ -762,6 +836,10 @@ async function startDashboard() {
 
     applySavedTheme();
 
+    financialStartDay = await getFinancialStartDay();
+    populateFinancialStartDays();
+    selectedPeriodStart = getCurrentFinancialPeriod().start;
+
     resetForm();
 
     await loadCategories();
@@ -779,3 +857,15 @@ async function startDashboard() {
 
 
 startDashboard();
+
+// Offline / synchronization status
+const syncStatusElement = document.getElementById("syncStatus");
+function updateSyncStatus(detail) {
+  if (!syncStatusElement) return;
+  const status = detail?.status || (navigator.onLine ? "synced" : "offline");
+  syncStatusElement.dataset.status = status;
+  syncStatusElement.textContent = status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync";
+  syncStatusElement.title = detail?.message || syncStatusElement.textContent;
+}
+window.addEventListener("moneta-sync-status", event => updateSyncStatus(event.detail));
+updateSyncStatus({ status: navigator.onLine ? "syncing" : "offline" });

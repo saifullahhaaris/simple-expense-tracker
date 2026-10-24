@@ -1,0 +1,14 @@
+{
+  "id": ".",
+  "name": "MonetaTracker",
+  "short_name": "Moneta",
+  "description": "Track your money. Understand your spending.",
+  "start_url": "./dashboard.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f5f5",
+  "theme_color": "#f5f5f5",
+  "icons": [
+    { "src": "assets/moneta-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

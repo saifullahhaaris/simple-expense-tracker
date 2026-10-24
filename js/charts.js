@@ -1,19 +1,22 @@
-const dashboardButton = document.getElementById("dashboardButton");
-const themeToggle = document.getElementById("themeToggle");
-const logoutButton = document.getElementById("logoutButton");
 const trendTitle = document.getElementById("trendTitle");
 const chartEmpty = document.getElementById("chartEmpty");
 const categoryChartTitle = document.getElementById("categoryChartTitle");
-const categoryMonth = document.getElementById("categoryMonth");
 const categoryEmpty = document.getElementById("categoryEmpty");
+const rangePreset = document.getElementById("rangePreset");
+const rangeStart = document.getElementById("rangeStart");
+const rangeEnd = document.getElementById("rangeEnd");
+const applyRangeButton = document.getElementById("applyRangeButton");
+const activeRangeLabel = document.getElementById("activeRangeLabel");
 
 let trendChart = null;
 let topExpensesChart = null;
 let categoryChart = null;
 let allTransactions = [];
+let visibleTransactions = [];
 let currentPeriod = "daily";
+let financialStartDay = 1;
+let activeRange = { start: null, end: null };
 
-const periodButtons = document.querySelectorAll(".period-button");
 
 function destroyCharts() {
   if (trendChart) {
@@ -28,7 +31,7 @@ function destroyCharts() {
 }
 
 function getExpenseTransactions() {
-  return allTransactions.filter(item => item.type === "expense");
+  return visibleTransactions.filter(item => item.type === "expense");
 }
 
 function getDailyData(transactions) {
@@ -81,7 +84,10 @@ function getMonthlyData(transactions) {
 
 function getTrendData() {
   const expenses = getExpenseTransactions();
-
+  const start = new Date(`${activeRange.start}T00:00:00`);
+  const end = new Date(`${activeRange.end}T00:00:00`);
+  const days = Math.max(1, Math.round((end - start) / 86400000) + 1);
+  currentPeriod = days <= 45 ? "daily" : days <= 150 ? "weekly" : "monthly";
   if (currentPeriod === "weekly") return getWeeklyData(expenses);
   if (currentPeriod === "monthly") return getMonthlyData(expenses);
   return getDailyData(expenses);
@@ -111,6 +117,7 @@ function renderCharts() {
 
   if (expenses.length === 0) {
     trendTitle.textContent = `${capitalize(currentPeriod)} Expenses`;
+    renderCategoryChart();
     return;
   }
 
@@ -234,16 +241,16 @@ function generateChartColors(count) {
 }
 
 function renderCategoryChart() {
-  if (categoryChart) categoryChart.destroy();
+  if (categoryChart) {
+    categoryChart.destroy();
+    categoryChart = null;
+  }
 
-  const selectedMonth = categoryMonth.value;
-  const expenses = allTransactions.filter(transaction => {
-    return transaction.type === "expense" && transaction.date.startsWith(selectedMonth);
-  });
+  const expenses = visibleTransactions.filter(transaction => transaction.type === "expense");
 
   if (expenses.length === 0) {
     categoryEmpty.hidden = false;
-    categoryChartTitle.textContent = `Spending by Category`;
+    categoryChartTitle.textContent = "Spending by Category";
     return;
   }
 
@@ -256,7 +263,7 @@ function renderCategoryChart() {
   }
 
   const categories = [...grouped.entries()].sort((a, b) => b[1] - a[1]);
-  categoryChartTitle.textContent = `Spending by Category — ${formatMonth(new Date(`${selectedMonth}-01T00:00:00`))}`;
+  categoryChartTitle.textContent = "Spending by Category";
 
   const textColor = getCssVariable("--text");
   const secondaryColor = getCssVariable("--text-secondary");
@@ -296,77 +303,104 @@ function renderCategoryChart() {
   });
 }
 
-function populateCategoryMonths() {
-  const months = [...new Set(
-    allTransactions
-      .filter(transaction => transaction.type === "expense")
-      .map(transaction => transaction.date.slice(0, 7))
-  )].sort().reverse();
+function getTodayString() {
+  return toISODate(new Date());
+}
 
-  categoryMonth.innerHTML = "";
+function getMonthBounds(dateString) {
+  const date = parseLocalDate(dateString);
+  return {
+    start: toISODate(new Date(date.getFullYear(), date.getMonth(), 1)),
+    end: toISODate(new Date(date.getFullYear(), date.getMonth() + 1, 0))
+  };
+}
 
-  if (months.length === 0) {
-    const option = document.createElement("option");
-    option.value = new Date().toISOString().slice(0, 7);
-    option.textContent = "No expense data";
-    categoryMonth.appendChild(option);
+function shiftDate(dateString, days) {
+  const date = parseLocalDate(dateString);
+  date.setDate(date.getDate() + days);
+  return toISODate(date);
+}
+
+function setActiveRange(start, end) {
+  if (start > end) {
+    alert("The start date must be on or before the end date.");
+    return false;
+  }
+
+  activeRange = { start, end };
+  rangeStart.value = start;
+  rangeEnd.value = end;
+  visibleTransactions = allTransactions.filter(transaction =>
+    transaction.date >= start && transaction.date <= end
+  );
+  activeRangeLabel.textContent = `Showing ${formatDateRange(start, end)}`;
+  renderCharts();
+  return true;
+}
+
+function applyPresetRange() {
+  const today = getTodayString();
+  const preset = rangePreset.value;
+  let start;
+  let end = today;
+
+  if (preset === "financial") {
+    ({ start, end } = getFinancialPeriodForDate(today, financialStartDay));
+  } else if (preset === "previous") {
+    const current = getFinancialPeriodForDate(today, financialStartDay);
+    const previousStart = shiftFinancialPeriod(current.start, financialStartDay, -1);
+    ({ start, end } = getFinancialPeriodForDate(previousStart, financialStartDay));
+  } else if (preset === "7" || preset === "30") {
+    start = shiftDate(today, -(Number(preset) - 1));
+  } else if (preset === "calendar") {
+    ({ start } = getMonthBounds(today));
+  } else if (preset === "all") {
+    const dates = allTransactions.map(transaction => transaction.date).sort();
+    start = dates[0] || today;
+    end = dates[dates.length - 1] || today;
+  } else if (preset === "custom") {
+    rangeStart.disabled = false;
+    rangeEnd.disabled = false;
     return;
   }
 
-  for (const month of months) {
-    const option = document.createElement("option");
-    option.value = month;
-    option.textContent = formatMonth(new Date(`${month}-01T00:00:00`));
-    categoryMonth.appendChild(option);
-  }
+  rangeStart.disabled = preset !== "custom";
+  rangeEnd.disabled = preset !== "custom";
+  setActiveRange(start, end);
 }
 
 function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-categoryMonth.addEventListener("change", () => {
-  renderCategoryChart();
-});
+rangePreset.addEventListener("change", applyPresetRange);
 
-periodButtons.forEach(button => {
-  button.addEventListener("click", () => {
-    currentPeriod = button.dataset.period;
-
-    periodButtons.forEach(item => item.classList.remove("active"));
-    button.classList.add("active");
-
-    renderCharts();
-  });
-});
-
-themeToggle.addEventListener("click", () => {
-  toggleTheme();
-  renderCharts();
-});
-
-dashboardButton.addEventListener("click", () => {
-  window.location.href = "dashboard.html";
-});
-
-logoutButton.addEventListener("click", async () => {
-  const { error } = await supabaseClient.auth.signOut();
-
-  if (error) {
-    alert(error.message);
+applyRangeButton.addEventListener("click", () => {
+  if (rangePreset.value !== "custom") {
+    applyPresetRange();
     return;
   }
 
-  window.location.href = "index.html";
+  if (!rangeStart.value || !rangeEnd.value) {
+    alert("Choose both a start date and an end date.");
+    return;
+  }
+
+  setActiveRange(rangeStart.value, rangeEnd.value);
 });
+
+
+
+
 
 async function startChartsPage() {
   try {
-    await getCurrentUser();
+    const user = await getCurrentUser();
     applySavedTheme();
+    const day = Number(user.user_metadata?.financial_start_day || 1);
+    financialStartDay = Number.isInteger(day) && day >= 1 && day <= 31 ? day : 1;
     allTransactions = await getTransactions();
-    populateCategoryMonths();
-    renderCharts();
+    applyPresetRange();
   } catch (error) {
     console.error(error);
     window.location.href = "index.html";
@@ -374,3 +408,17 @@ async function startChartsPage() {
 }
 
 startChartsPage();
+
+
+const syncStatusElement = document.getElementById("syncStatus");
+function updateSyncStatus(detail) {
+  if (!syncStatusElement) return;
+  const status = detail?.status || (navigator.onLine ? "synced" : "offline");
+  syncStatusElement.dataset.status = status;
+  syncStatusElement.textContent = status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync";
+  syncStatusElement.title = detail?.message || syncStatusElement.textContent;
+}
+window.addEventListener("moneta-sync-status", event => updateSyncStatus(event.detail));
+updateSyncStatus({ status: navigator.onLine ? "syncing" : "offline" });
+
+window.addEventListener("moneta-theme-changed", renderCharts);

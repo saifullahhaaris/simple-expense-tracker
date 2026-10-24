@@ -65,3 +65,50 @@ function toggleTheme() {
 
   return next;
 }
+
+
+// =========================
+// Financial period helpers
+// =========================
+
+function parseLocalDate(dateString) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function toISODate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getMonthStartDate(year, monthIndex, preferredDay) {
+  const lastDay = new Date(year, monthIndex + 1, 0).getDate();
+  return new Date(year, monthIndex, Math.min(preferredDay, lastDay));
+}
+
+function getFinancialPeriodForDate(dateString, startDay) {
+  const date = parseLocalDate(dateString);
+  let start = getMonthStartDate(date.getFullYear(), date.getMonth(), startDay);
+
+  if (date < start) {
+    start = getMonthStartDate(date.getFullYear(), date.getMonth() - 1, startDay);
+  }
+
+  const nextStart = getMonthStartDate(start.getFullYear(), start.getMonth() + 1, startDay);
+  const end = new Date(nextStart);
+  end.setDate(end.getDate() - 1);
+
+  return { start: toISODate(start), end: toISODate(end) };
+}
+
+function shiftFinancialPeriod(periodStart, startDay, direction) {
+  const start = parseLocalDate(periodStart);
+  const targetMonth = new Date(start.getFullYear(), start.getMonth() + direction, 1);
+  return toISODate(getMonthStartDate(targetMonth.getFullYear(), targetMonth.getMonth(), startDay));
+}
+
+function formatDateRange(startDate, endDate) {
+  return `${formatDate(startDate)} – ${formatDate(endDate)}`;
+}
