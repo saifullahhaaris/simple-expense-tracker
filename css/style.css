@@ -999,3 +999,18 @@ tbody tr:hover {
 .new-category-box[hidden] {
   display: none;
 }
+
+#loginButton,
+#signupButton {
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+#loginButton:hover,
+#signupButton:hover {
+  opacity: 0.85;
+}
