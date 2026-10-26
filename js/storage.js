@@ -6,6 +6,42 @@ const MONETA_STORES = ["transactions", "categories", "notes", "projects", "syncQ
 let monetaDbPromise;
 let syncInProgress = false;
 let syncRequested = false;
+let authInitializationPromise = null;
+let authStateListenerRegistered = false;
+
+function registerAuthStateListener() {
+  if (authStateListenerRegistered) return;
+  authStateListenerRegistered = true;
+
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") {
+      emitSyncStatus("offline", "Signed out. Local changes remain stored until you sign in again.");
+      return;
+    }
+
+    if (session?.user && ["SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(event)) {
+      emitSyncStatus("syncing", "Session restored. Synchronizing…");
+      flushSyncQueue();
+    }
+  });
+}
+
+async function waitForAuthInitialization() {
+  if (!authInitializationPromise) {
+    authInitializationPromise = (async () => {
+      try {
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (error) throw error;
+        return session;
+      } catch (error) {
+        console.warn("Supabase auth initialization failed:", error);
+        return null;
+      }
+    })();
+  }
+
+  return authInitializationPromise;
+}
 
 function openMonetaDb() {
   if (monetaDbPromise) return monetaDbPromise;
@@ -59,7 +95,9 @@ async function getCurrentUser() {
     if (userError) throw userError;
     if (user) return user;
   }
-  throw new Error("You need to sign in online at least once on this device before using MonetaTracker offline.");
+  const missingSessionError = new Error("No active Supabase auth session found. Please sign in to sync your data.");
+  missingSessionError.name = "AuthSessionMissingError";
+  throw missingSessionError;
 }
 
 async function localRecordsFor(store, userId) {
@@ -172,8 +210,6 @@ async function syncOneQueueItem(user, item) {
 async function flushSyncQueue() {
   if (!navigator.onLine) return;
   if (syncInProgress) {
-    // A save may enqueue a job while another flush is running. Ask the active
-    // flush to run again rather than leaving that new job stranded.
     syncRequested = true;
     return;
   }
@@ -182,10 +218,15 @@ async function flushSyncQueue() {
   syncRequested = false;
   let flushFailed = false;
   try {
-    const user = await getCurrentUser();
+    const session = await waitForAuthInitialization();
+    if (!session?.user) {
+      console.info("Sync paused: no authenticated user available. Pending queue preserved.");
+      emitSyncStatus("offline", "Waiting for sign-in to sync queued changes.");
+      return;
+    }
 
-    // Drain one job at a time from IndexedDB. Jobs are removed only after the
-    // corresponding server operation succeeds; errors preserve the failed job.
+    const user = session.user;
+
     while (navigator.onLine) {
       const next = (await localAll("syncQueue"))
         .filter(item => item.user_id === user.id)
@@ -212,12 +253,19 @@ async function flushSyncQueue() {
 }
 
 window.addEventListener("online", () => {
+  registerAuthStateListener();
   emitSyncStatus("syncing", "Connection restored. Synchronizing…");
   flushSyncQueue();
 });
 window.addEventListener("offline", () => emitSyncStatus("offline", "Offline mode. Changes are saved on this device."));
-window.addEventListener("load", () => { if (navigator.onLine) flushSyncQueue(); });
-window.addEventListener("focus", () => { if (navigator.onLine) flushSyncQueue(); });
+window.addEventListener("load", () => {
+  registerAuthStateListener();
+  if (navigator.onLine) flushSyncQueue();
+});
+window.addEventListener("focus", () => {
+  registerAuthStateListener();
+  if (navigator.onLine) flushSyncQueue();
+});
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && navigator.onLine) flushSyncQueue();
 });
