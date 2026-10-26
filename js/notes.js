@@ -54,5 +54,5 @@ cancelNoteButton.addEventListener("click", resetNoteForm);
   catch (error) { console.error(error); alert(error.message || "Could not open notes."); }
 })();
 const syncStatusElement = document.getElementById("syncStatus");
-function updateSyncStatus(detail) { const status = detail?.status || (navigator.onLine ? "synced" : "offline"); syncStatusElement.dataset.status = status; syncStatusElement.textContent = status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync"; syncStatusElement.title = detail?.message || syncStatusElement.textContent; }
+function updateSyncStatus(detail) { const status = detail?.status || (navigator.onLine ? "synced" : "offline"); syncStatusElement.dataset.status = status; syncStatusElement.textContent = detail?.message?.startsWith("Sync failed:") ? "Sync error · see details" : status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync"; syncStatusElement.title = detail?.message || syncStatusElement.textContent; }
 window.addEventListener("moneta-sync-status", event => updateSyncStatus(event.detail)); updateSyncStatus({ status: navigator.onLine ? "syncing" : "offline" });

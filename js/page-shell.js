@@ -21,7 +21,7 @@ function setPageSyncStatus(detail) {
   if (!pageSyncStatus) return;
   const status = detail?.status || (navigator.onLine ? "synced" : "offline");
   pageSyncStatus.dataset.status = status;
-  pageSyncStatus.textContent = status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync";
+  pageSyncStatus.textContent = detail?.message?.startsWith("Sync failed:") ? "Sync error · see details" : status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync";
   pageSyncStatus.title = detail?.message || pageSyncStatus.textContent;
 }
 window.addEventListener("moneta-sync-status", event => setPageSyncStatus(event.detail));

@@ -1,10 +1,11 @@
 // MonetaTracker offline-first storage layer.
 // A successful local save is immediate; queued changes synchronize when online.
 const MONETA_DB_NAME = "monetatracker-local-v1";
-const MONETA_DB_VERSION = 1;
-const MONETA_STORES = ["transactions", "categories", "notes", "syncQueue"];
+const MONETA_DB_VERSION = 2;
+const MONETA_STORES = ["transactions", "categories", "notes", "projects", "syncQueue"];
 let monetaDbPromise;
 let syncInProgress = false;
+let syncRequested = false;
 
 function openMonetaDb() {
   if (monetaDbPromise) return monetaDbPromise;
@@ -12,7 +13,7 @@ function openMonetaDb() {
     const request = indexedDB.open(MONETA_DB_NAME, MONETA_DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
-      for (const store of ["transactions", "categories", "notes"]) {
+      for (const store of ["transactions", "categories", "notes", "projects"]) {
         if (!db.objectStoreNames.contains(store)) db.createObjectStore(store, { keyPath: "id" });
       }
       if (!db.objectStoreNames.contains("syncQueue")) db.createObjectStore("syncQueue", { keyPath: "queueId" });
@@ -68,12 +69,13 @@ async function localRecordsFor(store, userId) {
 
 
 async function cacheCloudRecords(storeName, userId, cloudRecords) {
-  const cloudIds = new Set((cloudRecords || []).map(record => record.id));
   const pending = (await localAll("syncQueue")).filter(item => item.user_id === userId && item.table === storeName);
   const pendingIds = new Set(pending.map(item => item.record_id));
-  for (const localRecord of await localRecordsFor(storeName, userId)) {
-    if (!cloudIds.has(localRecord.id) && !pendingIds.has(localRecord.id)) await localDelete(storeName, localRecord.id);
-  }
+
+  // Never delete a local record just because it is absent from a cloud response.
+  // Older versions saved the local record and queue item separately; a failure
+  // between those writes could leave a valuable local-only record. Absence alone
+  // is not enough evidence that such a record is safe to discard.
   for (const record of cloudRecords || []) {
     // Do not overwrite a local edit that is still waiting in the sync queue.
     if (!pendingIds.has(record.id)) await localPut(storeName, record);
@@ -83,50 +85,152 @@ async function cacheCloudRecords(storeName, userId, cloudRecords) {
 async function enqueueSync(userId, table, operation, id, payload) {
   await dbRequest("syncQueue", "readwrite", store => store.put({
     queueId: makeId(), user_id: userId, table, operation, record_id: id,
-    payload: payload || null, created_at: new Date().toISOString()
+    payload: payload ?? null, created_at: new Date().toISOString()
   }));
   emitSyncStatus("pending", "Changes saved on this device; waiting to sync.");
 }
 
+// Save a local record and its sync job in one IndexedDB transaction.
+// This prevents a locally saved change from being left out of the queue if
+// the browser closes or a storage operation fails between two separate writes.
+async function saveRecordAndEnqueue(table, record) {
+  if (!MONETA_STORES.includes(table) || table === "syncQueue") {
+    throw new Error(`Unsupported local data store: ${table}`);
+  }
+  const db = await openMonetaDb();
+  const queueItem = {
+    queueId: makeId(), user_id: record.user_id, table, operation: "upsert",
+    record_id: record.id, payload: record, created_at: new Date().toISOString()
+  };
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction([table, "syncQueue"], "readwrite");
+    tx.objectStore(table).put(record);
+    tx.objectStore("syncQueue").put(queueItem);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("Could not save the record and its sync job."));
+    tx.onabort = () => reject(tx.error || new Error("The local save was cancelled."));
+  });
+  emitSyncStatus("pending", "Changes saved on this device; waiting to sync.");
+}
+
+// A deletion and its sync job are atomic too. If the browser fails, either
+// both operations are committed or neither is, so a deletion is not forgotten.
+async function deleteRecordAndEnqueue(table, userId, id) {
+  if (!MONETA_STORES.includes(table) || table === "syncQueue") {
+    throw new Error(`Unsupported local data store: ${table}`);
+  }
+  const db = await openMonetaDb();
+  const queueItem = {
+    queueId: makeId(), user_id: userId, table, operation: "delete",
+    record_id: id, payload: null, created_at: new Date().toISOString()
+  };
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction([table, "syncQueue"], "readwrite");
+    tx.objectStore(table).delete(id);
+    tx.objectStore("syncQueue").put(queueItem);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error("Could not save the deletion and its sync job."));
+    tx.onabort = () => reject(tx.error || new Error("The local deletion was cancelled."));
+  });
+  emitSyncStatus("pending", "Changes saved on this device; waiting to sync.");
+}
+
+async function syncOneQueueItem(user, item) {
+  if (item.user_id !== user.id) throw new Error("Refusing to sync a change for a different account.");
+
+  if (item.table === "profile") {
+    const { error } = await supabaseClient.auth.updateUser({ data: item.payload });
+    if (error) throw error;
+  } else {
+    if (!MONETA_STORES.includes(item.table) || item.table === "syncQueue") {
+      throw new Error(`Unsupported sync target: ${item.table}`);
+    }
+
+    if (item.operation === "delete") {
+      const { error } = await supabaseClient.from(item.table).delete()
+        .eq("id", item.record_id).eq("user_id", user.id);
+      if (error) throw error;
+    } else if (item.operation === "upsert") {
+      // RLS remains the security boundary; a failed server write stays queued.
+      const { error } = await supabaseClient.from(item.table)
+        .upsert(item.payload, { onConflict: "id" });
+      if (error) throw error;
+
+      // The local record was committed together with this queue item. Do not
+      // replace it with the response here: a newer local edit could have happened
+      // while the request was in flight. A later cloud read can refresh server data.
+      await localDelete("syncQueue", item.queueId);
+      return;
+    } else {
+      throw new Error(`Unsupported sync operation: ${item.operation}`);
+    }
+  }
+
+  await localDelete("syncQueue", item.queueId);
+}
+
 async function flushSyncQueue() {
-  if (!navigator.onLine || syncInProgress) return;
+  if (!navigator.onLine) return;
+  if (syncInProgress) {
+    // A save may enqueue a job while another flush is running. Ask the active
+    // flush to run again rather than leaving that new job stranded.
+    syncRequested = true;
+    return;
+  }
+
   syncInProgress = true;
+  syncRequested = false;
+  let flushFailed = false;
   try {
     const user = await getCurrentUser();
-    const items = (await localAll("syncQueue"))
-      .filter(item => item.user_id === user.id)
-      .sort((a, b) => a.created_at.localeCompare(b.created_at));
-    for (const item of items) {
-      if (item.table === "profile") {
-        const { error } = await supabaseClient.auth.updateUser({ data: item.payload });
-        if (error) throw error;
-      } else if (item.operation === "delete") {
-        const { error } = await supabaseClient.from(item.table).delete()
-          .eq("id", item.record_id).eq("user_id", user.id);
-        if (error) throw error;
-      } else {
-        const { data, error } = await supabaseClient.from(item.table)
-          .upsert(item.payload, { onConflict: "id" }).select().single();
-        if (error) throw error;
-        if (data && MONETA_STORES.includes(item.table) && item.table !== "syncQueue") {
-          await localPut(item.table, data);
-        }
-      }
-      await localDelete("syncQueue", item.queueId);
+
+    // Drain one job at a time from IndexedDB. Jobs are removed only after the
+    // corresponding server operation succeeds; errors preserve the failed job.
+    while (navigator.onLine) {
+      const next = (await localAll("syncQueue"))
+        .filter(item => item.user_id === user.id)
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))[0];
+      if (!next) break;
+      await syncOneQueueItem(user, next);
     }
+
     const remaining = (await localAll("syncQueue")).filter(item => item.user_id === user.id).length;
-    emitSyncStatus(remaining ? "pending" : "synced", remaining ? `${remaining} change(s) waiting to sync.` : "All changes synchronized.");
+    emitSyncStatus(remaining ? "pending" : "synced",
+      remaining ? `${remaining} change(s) waiting to sync.` : "All changes synchronized.");
   } catch (error) {
+    flushFailed = true;
     console.warn("MonetaTracker sync is waiting:", error);
-    emitSyncStatus("pending", "Saved on this device. Sync will retry when the connection is available.");
+    emitSyncStatus("pending",
+      `Sync failed: ${error?.message || "Unknown server error"}. Your local copy is retained; sign in or reconnect, then retry.`);
   } finally {
     syncInProgress = false;
+    if (syncRequested && navigator.onLine && !flushFailed) {
+      syncRequested = false;
+      Promise.resolve().then(() => flushSyncQueue());
+    }
   }
 }
 
-window.addEventListener("online", () => { emitSyncStatus("syncing", "Connection restored. Synchronizing…"); flushSyncQueue(); });
+window.addEventListener("online", () => {
+  emitSyncStatus("syncing", "Connection restored. Synchronizing…");
+  flushSyncQueue();
+});
 window.addEventListener("offline", () => emitSyncStatus("offline", "Offline mode. Changes are saved on this device."));
 window.addEventListener("load", () => { if (navigator.onLine) flushSyncQueue(); });
+window.addEventListener("focus", () => { if (navigator.onLine) flushSyncQueue(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && navigator.onLine) flushSyncQueue();
+});
+
+// Retry after Supabase restores or changes the authenticated session. Defer the
+// work outside the auth callback so Supabase's auth lock cannot be re-entered.
+if (supabaseClient?.auth?.onAuthStateChange) {
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session?.user && ["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(event)) {
+      Promise.resolve().then(() => flushSyncQueue());
+    }
+  });
+}
 
 async function getFinancialStartDay() {
   const user = await getCurrentUser();
@@ -166,15 +270,15 @@ function mergePendingRecords(records, table, userId) {
 }
 
 async function saveRecord(table, record) {
-  await localPut(table, record);
-  await enqueueSync(record.user_id, table, "upsert", record.id, record);
+  await saveRecordAndEnqueue(table, record);
   await flushSyncQueue();
   return record;
 }
 
-async function addTransaction({ date, description, category, type, amount }) {
+async function addTransaction({ date, description, category, type, amount, project_id = null }) {
   const user = await getCurrentUser();
-  return saveRecord("transactions", { id: makeId(), user_id: user.id, date, description: description.trim(), category, type, amount: Number(amount), created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+  const now = new Date().toISOString();
+  return saveRecord("transactions", { id: makeId(), user_id: user.id, date, description: description.trim(), category, type, amount: Number(amount), project_id: project_id || null, created_at: now, updated_at: now });
 }
 
 async function updateTransaction(id, { date, description, category, type, amount }) {
@@ -186,8 +290,7 @@ async function updateTransaction(id, { date, description, category, type, amount
 
 async function deleteTransaction(id) {
   const user = await getCurrentUser();
-  await localDelete("transactions", id);
-  await enqueueSync(user.id, "transactions", "delete", id, null);
+  await deleteRecordAndEnqueue("transactions", user.id, id);
   await flushSyncQueue();
 }
 
@@ -226,22 +329,52 @@ async function getStickyNotes() {
   return (await localRecordsFor("notes", user.id)).sort((a, b) => Number(b.pinned) - Number(a.pinned) || String(b.updated_at).localeCompare(String(a.updated_at)));
 }
 
-async function saveStickyNote({ id, title, content, pinned = false, color = "yellow" }) {
+async function saveStickyNote({ id, title, content, pinned = false, color = "yellow", project_id = null }) {
   const user = await getCurrentUser();
   const now = new Date().toISOString();
   const existing = id ? (await localRecordsFor("notes", user.id)).find(note => note.id === id) : null;
-  const note = { ...(existing || {}), id: id || makeId(), user_id: user.id, title: title.trim(), content: content.trim(), pinned: Boolean(pinned), color, created_at: existing?.created_at || now, updated_at: now };
+  const note = { ...(existing || {}), id: id || makeId(), user_id: user.id, title: title.trim(), content: content.trim(), pinned: Boolean(pinned), color, project_id: project_id ?? existing?.project_id ?? null, created_at: existing?.created_at || now, updated_at: now };
   return saveRecord("notes", note);
 }
 
 async function deleteStickyNote(id) {
   const user = await getCurrentUser();
-  await localDelete("notes", id);
-  await enqueueSync(user.id, "notes", "delete", id, null);
+  await deleteRecordAndEnqueue("notes", user.id, id);
   await flushSyncQueue();
 }
 
 async function getPendingSyncCount() {
   const user = await getCurrentUser();
   return (await localAll("syncQueue")).filter(item => item.user_id === user.id).length;
+}
+
+
+// Project CRUD shares the same offline-first queue as transactions and notes.
+async function getProjects({ includeArchived = false } = {}) {
+  const user = await getCurrentUser();
+  if (navigator.onLine) {
+    try {
+      const { data, error } = await supabaseClient.from("projects").select("*").eq("user_id", user.id).order("updated_at", { ascending: false });
+      if (error) throw error;
+      await cacheCloudRecords("projects", user.id, data || []);
+    } catch (error) { console.warn("Using locally cached projects:", error); }
+  }
+  const projects = await localRecordsFor("projects", user.id);
+  return projects.filter(project => includeArchived || project.status !== "archived")
+    .sort((a, b) => String(b.updated_at || b.created_at).localeCompare(String(a.updated_at || a.created_at)));
+}
+
+async function getProject(projectId) {
+  return (await getProjects({ includeArchived: true })).find(project => project.id === projectId) || null;
+}
+
+async function saveProject({ id, name, description = "", budget = "", target_date = "", status = "active" }) {
+  const user = await getCurrentUser();
+  const cleanName = String(name || "").trim();
+  if (!cleanName) throw new Error("Enter a project name.");
+  const existing = id ? (await localRecordsFor("projects", user.id)).find(project => project.id === id) : null;
+  const now = new Date().toISOString();
+  const project = { ...(existing || {}), id: id || makeId(), user_id: user.id, name: cleanName, description: String(description || "").trim(), budget: budget === "" || budget == null ? null : Number(budget), target_date: target_date || null, status, created_at: existing?.created_at || now, updated_at: now };
+  if (project.budget !== null && (!Number.isFinite(project.budget) || project.budget < 0)) throw new Error("Budget must be a valid non-negative amount.");
+  return saveRecord("projects", project);
 }

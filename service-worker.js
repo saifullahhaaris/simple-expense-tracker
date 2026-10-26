@@ -1,8 +1,8 @@
-const CACHE_NAME = "monetatracker-shell-v2";
+const CACHE_NAME = "monetatracker-shell-v4";
 const APP_FILES = [
-  "./", "./index.html", "./signup.html", "./manifest.json", "./assets/moneta-icon.svg", "./dashboard.html", "./charts.html", "./notes.html", "./projects.html",
+  "./", "./index.html", "./signup.html", "./manifest.json", "./assets/moneta-icon.svg", "./dashboard.html", "./charts.html", "./notes.html", "./projects.html", "./project.html",
   "./css/style.css", "./js/supabase.js", "./js/utils.js", "./js/storage.js", "./js/offline.js",
-  "./js/app.js", "./js/signup.js", "./js/dashboard.js", "./js/charts.js", "./js/notes.js", "./js/page-shell.js",
+  "./js/app.js", "./js/signup.js", "./js/dashboard.js", "./js/charts.js", "./js/notes.js", "./js/page-shell.js", "./js/projects.js", "./js/project.js",
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2",
   "https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"
 ];

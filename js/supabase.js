@@ -3,5 +3,13 @@ const SUPABASE_KEY = "sb_publishable__QK5_4ghjAOSf56BTIm_dA_jUemvs9U";
 
 const supabaseClient = window.supabase.createClient(
   SUPABASE_URL,
-  SUPABASE_KEY
+  SUPABASE_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storageKey: "moneta-auth"
+    }
+  }
 );
