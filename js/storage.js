@@ -6,7 +6,6 @@ const MONETA_STORES = ["transactions", "categories", "notes", "projects", "syncQ
 let monetaDbPromise;
 let syncInProgress = false;
 let syncRequested = false;
-let authInitializationPromise = null;
 let authStateListenerRegistered = false;
 
 function registerAuthStateListener() {
@@ -15,32 +14,20 @@ function registerAuthStateListener() {
 
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (event === "SIGNED_OUT") {
-      emitSyncStatus("offline", "Signed out. Local changes remain stored until you sign in again.");
+      emitSyncStatus(
+        "offline",
+        "Signed out. Local changes remain stored until you sign in again."
+      );
       return;
     }
 
-    if (session?.user && ["SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(event)) {
-      emitSyncStatus("syncing", "Session restored. Synchronizing…");
-      flushSyncQueue();
+    if (
+      session?.user &&
+      ["SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(event)
+    ) {
+      Promise.resolve().then(() => flushSyncQueue());
     }
   });
-}
-
-async function waitForAuthInitialization() {
-  if (!authInitializationPromise) {
-    authInitializationPromise = (async () => {
-      try {
-        const { data: { session }, error } = await supabaseClient.auth.getSession();
-        if (error) throw error;
-        return session;
-      } catch (error) {
-        console.warn("Supabase auth initialization failed:", error);
-        return null;
-      }
-    })();
-  }
-
-  return authInitializationPromise;
 }
 
 function openMonetaDb() {
@@ -218,7 +205,13 @@ async function flushSyncQueue() {
   syncRequested = false;
   let flushFailed = false;
   try {
-    const session = await waitForAuthInitialization();
+    const {
+      data: { session },
+      error: sessionError
+    } = await supabaseClient.auth.getSession();
+
+    if (sessionError) throw sessionError;
+
     if (!session?.user) {
       console.info("Sync paused: no authenticated user available. Pending queue preserved.");
       emitSyncStatus("offline", "Waiting for sign-in to sync queued changes.");
@@ -269,16 +262,6 @@ window.addEventListener("focus", () => {
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && navigator.onLine) flushSyncQueue();
 });
-
-// Retry after Supabase restores or changes the authenticated session. Defer the
-// work outside the auth callback so Supabase's auth lock cannot be re-entered.
-if (supabaseClient?.auth?.onAuthStateChange) {
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (session?.user && ["INITIAL_SESSION", "SIGNED_IN", "TOKEN_REFRESHED", "USER_UPDATED"].includes(event)) {
-      Promise.resolve().then(() => flushSyncQueue());
-    }
-  });
-}
 
 async function getFinancialStartDay() {
   const user = await getCurrentUser();
