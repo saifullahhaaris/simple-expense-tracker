@@ -864,8 +864,15 @@ function updateSyncStatus(detail) {
   if (!syncStatusElement) return;
   const status = detail?.status || (navigator.onLine ? "synced" : "offline");
   syncStatusElement.dataset.status = status;
-  syncStatusElement.textContent = status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync";
+  syncStatusElement.textContent = detail?.message?.startsWith("Sync failed:") ? "Sync error · see details" : status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync";
   syncStatusElement.title = detail?.message || syncStatusElement.textContent;
 }
 window.addEventListener("moneta-sync-status", event => updateSyncStatus(event.detail));
+// Pull in changes from other devices once a sync pass finishes.
+let syncRefreshTimer;
+window.addEventListener("moneta-sync-status", event => {
+  if (event.detail?.status !== "synced") return;
+  clearTimeout(syncRefreshTimer);
+  syncRefreshTimer = setTimeout(() => { loadTransactions(); loadCategories(); }, 300);
+});
 updateSyncStatus({ status: navigator.onLine ? "syncing" : "offline" });

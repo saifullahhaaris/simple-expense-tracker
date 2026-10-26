@@ -397,8 +397,7 @@ async function startChartsPage() {
   try {
     const user = await getCurrentUser();
     applySavedTheme();
-    const day = Number(user.user_metadata?.financial_start_day || 1);
-    financialStartDay = Number.isInteger(day) && day >= 1 && day <= 31 ? day : 1;
+    financialStartDay = await getFinancialStartDay();
     allTransactions = await getTransactions();
     applyPresetRange();
   } catch (error) {
@@ -415,10 +414,16 @@ function updateSyncStatus(detail) {
   if (!syncStatusElement) return;
   const status = detail?.status || (navigator.onLine ? "synced" : "offline");
   syncStatusElement.dataset.status = status;
-  syncStatusElement.textContent = status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync";
+  syncStatusElement.textContent = detail?.message?.startsWith("Sync failed:") ? "Sync error · see details" : status === "synced" ? "Synced" : status === "syncing" ? "Syncing…" : status === "offline" ? "Offline · saved on device" : "Changes waiting to sync";
   syncStatusElement.title = detail?.message || syncStatusElement.textContent;
 }
 window.addEventListener("moneta-sync-status", event => updateSyncStatus(event.detail));
+let chartsRefreshTimer;
+window.addEventListener("moneta-sync-status", event => {
+  if (event.detail?.status !== "synced") return;
+  clearTimeout(chartsRefreshTimer);
+  chartsRefreshTimer = setTimeout(async () => { try { allTransactions = await getTransactions(); applyPresetRange(); } catch (e) { console.warn(e); } }, 300);
+});
 updateSyncStatus({ status: navigator.onLine ? "syncing" : "offline" });
 
 window.addEventListener("moneta-theme-changed", renderCharts);

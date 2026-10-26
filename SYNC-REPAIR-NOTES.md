@@ -29,3 +29,21 @@ Do not clear browser data, delete IndexedDB, or delete the sync queue to trouble
 8. Check the browser console and the sync status if any item stays pending. Do not assume that a green/“Synced” status proves every historical queue item or every device has been checked.
 
 Because this app contains real user data, test with a harmless record first and retain the original deployment until the checks pass.
+
+## Second repair pass (cross-device sync, deletes, projects)
+
+Fixed in `js/storage.js` and the pages:
+- **Deletes from another device now arrive.** Records are marked `_cloud` once confirmed in Supabase. A marked record missing from the cloud (and not pending) is removed locally. Unmarked local-only records are never discarded; they are uploaded instead.
+- **Only the first 1000 rows were ever fetched** (Supabase default limit). Fetches are now paged, which also keeps the deletion rule above safe.
+- **One rejected item no longer blocks the whole queue.** Data/policy errors are recorded on the item (`last_error`), skipped, and retried next pass; network/auth errors still pause the pass. Status shows "Sync error" with details.
+- **Silent delete failure**: RLS can make DELETE succeed with 0 rows. Deletes are now verified and fail loudly.
+- Queue order is now strictly deterministic (`seq`), so a project always syncs before notes/transactions that reference it. A child whose project was deleted is unlinked instead of failing forever (FK 23503).
+- Stale fetch responses can no longer overwrite a newer local edit; local-only fields (`_cloud`) are stripped before upload.
+- **Project delete added** (Delete button on My Projects). Its transactions/notes stay, unassigned.
+- Dashboard, Charts and Notes now refresh after a sync completes; Charts uses the same financial-start-day as the dashboard; the start day is refreshed from the account so other devices agree.
+- Auth-state callback no longer calls Supabase synchronously (deadlock risk). Only one tab drains the queue at a time.
+- Service worker cache bumped to `monetatracker-shell-v5`.
+
+Database: `sync-policies.sql` (optional, idempotent) ensures select/insert/update/delete own-row policies on all four tables. Run `projects-and-sync-migration.sql` first if not already applied. Check existing policies with the query at the top of the file before running.
+
+Note: a record that existed on this device *before* this update and was deleted on another device may be re-uploaded once (it has no cloud marker yet). Delete it again if it reappears.

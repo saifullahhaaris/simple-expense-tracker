@@ -1,4 +1,4 @@
-const CACHE_NAME = "monetatracker-shell-v4";
+const CACHE_NAME = "monetatracker-shell-v5";
 const APP_FILES = [
   "./", "./index.html", "./signup.html", "./manifest.json", "./assets/moneta-icon.svg", "./dashboard.html", "./charts.html", "./notes.html", "./projects.html", "./project.html",
   "./css/style.css", "./js/supabase.js", "./js/utils.js", "./js/storage.js", "./js/offline.js",
