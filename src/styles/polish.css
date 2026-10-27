@@ -1,0 +1,106 @@
+/* =====================================================================
+   Polish layer. Sits on top of legacy.css (the original look) and only
+   adds: hamburger + drawer, subtle motion, focus states, backup page.
+   ===================================================================== */
+
+:root {
+  --accent: #111111;
+  --ring: rgba(59, 130, 246, 0.55);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+[data-theme="dark"] { --accent: #f5f5f5; }
+
+html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; }
+body { -webkit-font-smoothing: antialiased; transition: background 0.25s ease, color 0.25s ease; }
+body.menu-open { overflow: hidden; }
+
+/* Keyboard focus */
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 8px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline-offset: 0; }
+
+/* Gentle page entrance */
+.app > * { animation: rise 0.35s var(--ease) both; }
+.app > *:nth-child(2) { animation-delay: 0.04s; }
+.app > *:nth-child(3) { animation-delay: 0.08s; }
+.app > *:nth-child(4) { animation-delay: 0.12s; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Cards & panels */
+.card, .panel, .project-card, .backup-card, .sticky-note { transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), border-color 0.2s ease; }
+.card:hover, .project-card:hover, .backup-card:hover { transform: translateY(-2px); box-shadow: 0 14px 30px var(--shadow-soft); }
+.card-note { margin-top: 6px; font-size: 12px; color: var(--text-secondary); }
+button:not(:disabled), a.primary { transition: transform 0.12s ease, background 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; }
+button:not(:disabled):active { transform: scale(0.98); }
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.header-actions { gap: 10px; }
+
+/* ------------------------------------------------------------ hamburger */
+.menu-button {
+  width: 40px; height: 40px; padding: 0; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); cursor: pointer;
+}
+.menu-button span { display: block; width: 18px; height: 2px; border-radius: 2px; background: currentColor; transition: transform 0.2s ease; }
+.menu-button:hover { background: var(--surface-soft); }
+.menu-button:hover span:nth-child(2) { transform: scaleX(0.7); }
+
+/* ------------------------------------------------------------ drawer */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 1100; background: rgba(8, 10, 15, 0.45); backdrop-filter: blur(3px);
+  opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+}
+.drawer-overlay.is-open { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 1200; width: min(86vw, 330px);
+  display: flex; flex-direction: column; gap: 6px; padding: 18px 16px 16px;
+  background: var(--surface); color: var(--text); border-left: 1px solid var(--border);
+  box-shadow: -20px 0 50px rgba(0, 0, 0, 0.18); overflow-y: auto;
+  transform: translateX(104%); visibility: hidden; transition: transform 0.28s var(--ease), visibility 0s linear 0.28s;
+}
+.drawer.is-open { transform: none; visibility: visible; transition: transform 0.28s var(--ease); }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.drawer-brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.drawer-brand img { border-radius: 9px; flex: none; }
+.drawer-brand strong { display: block; font-size: 15px; letter-spacing: -0.2px; }
+.drawer-brand span { display: block; max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text-secondary); }
+.drawer-close { width: 34px; height: 34px; border: 1px solid var(--border); border-radius: 9px; background: transparent; color: var(--text); cursor: pointer; }
+.drawer-close:hover { background: var(--surface-soft); }
+.drawer-section { display: flex; flex-direction: column; gap: 2px; padding: 10px 0; border-top: 1px solid var(--border); }
+.drawer-label { margin: 2px 8px 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
+.drawer-link {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: 0; border-radius: 12px; background: transparent;
+  color: var(--text); font-size: 14.5px; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer;
+}
+.drawer-link:hover { background: var(--surface-soft); }
+.drawer-link.active { background: var(--accent); color: var(--surface); }
+.drawer-icon { width: 22px; text-align: center; font-size: 18px; line-height: 1; }
+.switch { margin-left: auto; width: 38px; height: 22px; border-radius: 999px; background: var(--border); position: relative; transition: background 0.2s ease; }
+.switch i { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 4px rgba(0,0,0,.3); transition: transform 0.2s var(--ease); }
+.switch.on { background: var(--income); }
+.switch.on i { transform: translateX(16px); }
+.drawer-sync { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 8px; }
+.drawer-note { margin: 8px 8px 0; font-size: 12px; line-height: 1.45; color: var(--text-secondary); word-break: break-word; }
+.drawer-footer { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); }
+.drawer-logout {
+  width: 100%; height: 44px; border: 1px solid var(--expense); border-radius: 12px; background: transparent; color: var(--expense);
+  font-weight: 700; cursor: pointer;
+}
+.drawer-logout:hover { background: var(--expense); color: #fff; }
+
+/* ------------------------------------------------------------ backup page */
+.backup-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.backup-card { display: flex; flex-direction: column; gap: 10px; padding: 18px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-soft); }
+.backup-card h3 { font-size: 16px; }
+.backup-card p { flex: 1; font-size: 13.5px; line-height: 1.5; color: var(--text-secondary); }
+.backup-message { min-height: 22px; margin-top: 4px; }
+@media (max-width: 760px) { .backup-grid { grid-template-columns: 1fr; } }
+
+/* The header's old Theme/Logout buttons are now in the drawer; keep badge compact on phones */
+@media (max-width: 520px) {
+  header h1 { font-size: 24px; }
+  .header-actions { gap: 6px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
