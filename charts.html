@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Expense Charts</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#f5f5f5">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <div class="app">
+
+    <header>
+      <div>
+        <h1>Expense Charts</h1>
+        <p class="subtitle">Understand where your money is going.</p>
+      </div>
+
+      <div class="header-actions">
+        <button type="button" id="themeToggle" class="header-button theme-toggle">Theme</button>
+        <button type="button" id="logoutButton" class="header-button">Logout</button>
+        <span id="syncStatus" class="sync-status" role="status">Checking sync…</span>
+      </div>
+    </header>
+<section class="panel chart-range-panel">
+      <div class="chart-range-controls">
+        <div class="form-group">
+          <label for="rangePreset">Date range</label>
+          <select id="rangePreset">
+            <option value="financial">Current financial period</option>
+            <option value="previous">Previous financial period</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="calendar">Current calendar month</option>
+            <option value="all">All time</option>
+            <option value="custom">Custom range</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="rangeStart">From</label>
+          <input type="date" id="rangeStart">
+        </div>
+        <div class="form-group">
+          <label for="rangeEnd">To</label>
+          <input type="date" id="rangeEnd">
+        </div>
+        <button type="button" id="applyRangeButton" class="primary">Apply range</button>
+      </div>
+      <p id="activeRangeLabel" class="chart-range-label"></p>
+    </section>
+
+    <section class="chart-grid">
+      <article class="chart-card">
+        <div class="chart-card-header category-header">
+          <div>
+            <h2 id="categoryChartTitle">Spending by Category</h2>
+            <p>See how your spending is divided between your categories.</p>
+          </div>
+          <p class="chart-range-label">Based on the selected date range</p>
+        </div>
+        <div class="chart-container category-chart-container">
+          <canvas id="categoryChart"></canvas>
+        </div>
+        <p id="categoryEmpty" class="chart-empty" hidden>No expense data for this date range.</p>
+      </article>
+
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h2 id="trendTitle">Daily Expenses</h2>
+            <p>How much you spent over time.</p>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="expenseTrendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-card-header">
+          <div>
+            <h2>Where You Spend Most</h2>
+            <p>Your biggest expense descriptions.</p>
+          </div>
+        </div>
+        <div class="chart-container chart-container-small">
+          <canvas id="topExpensesChart"></canvas>
+        </div>
+        <div id="chartEmpty" class="empty chart-empty" hidden>
+          Add some expense transactions to see your spending patterns.
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
+    <a href="projects.html" class="nav-item"><span class="nav-icon">▦</span><span>Projects</span></a>
+    <a href="notes.html" class="nav-item"><span class="nav-icon">▤</span><span>Notes</span></a>
+    <a href="charts.html" class="nav-item active" aria-current="page"><span class="nav-icon">▥</span><span>Charts</span></a>
+  </nav>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/offline.js"></script>
+  <script src="js/page-shell.js"></script>
+  <script src="js/charts.js"></script>
+
+</body>
+
+</html>

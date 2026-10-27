@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Expense Tracker</title>
+
+  <link
+    rel="stylesheet"
+    href="css/style.css"
+  >
+
+</head>
+
+
+<body>
+
+  <div class="app">
+
+
+    <!-- =========================
+         Header
+    ========================== -->
+
+    <header>
+
+      <div>
+
+        <h1>
+          Expense Tracker
+        </h1>
+
+        <p class="subtitle">
+          Just record money in and money out.
+        </p>
+
+      </div>
+
+
+      <div class="header-actions">
+        <button type="button" id="themeToggle" class="header-button theme-toggle">Dark</button>
+        <button type="button" id="logoutButton" class="header-button">Logout</button>
+        <span id="syncStatus" class="sync-status" role="status">Checking sync…</span>
+      </div>
+    </header>
+
+
+    <!-- =========================
+         Financial period controls
+    ========================== -->
+
+    <section class="panel financial-period-panel">
+      <div class="financial-period-toolbar">
+        <div class="period-navigation">
+          <button type="button" id="previousPeriodButton" class="secondary" aria-label="Previous financial period">Previous</button>
+          <div class="period-current">
+            <h2 id="financialPeriodTitle">Financial period</h2>
+            <p id="financialPeriodDates" class="subtitle">Loading period…</p>
+          </div>
+          <button type="button" id="nextPeriodButton" class="secondary" aria-label="Next financial period">Next</button>
+        </div>
+        <details class="financial-settings">
+          <summary>Financial month settings</summary>
+          <div class="financial-settings-content">
+            <label for="financialStartDay">My financial month starts on</label>
+            <div class="financial-setting-row">
+              <select id="financialStartDay"></select>
+              <button type="button" id="saveFinancialSettingsButton" class="secondary">Save</button>
+            </div>
+            <p class="form-help">For example, choosing 25 shows the 25th through the 24th of the next month.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- =========================
+         Summary
+    ========================== -->
+
+    <section class="summary">
+
+
+      <div class="card">
+
+        <div class="label">
+          Income
+        </div>
+
+        <div
+          class="value"
+          id="totalIncome"
+        >
+          0.00
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="label">
+          Expenses
+        </div>
+
+        <div
+          class="value"
+          id="totalExpense"
+        >
+          0.00
+        </div>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="label">
+          Balance
+        </div>
+
+        <div
+          class="value"
+          id="balance"
+        >
+          0.00
+        </div>
+
+      </div>
+
+
+    </section>
+
+
+    <!-- =========================
+         Add Transaction
+    ========================== -->
+
+    <section class="panel">
+
+
+      <div class="panel-header">
+
+        <div>
+
+          <h2 id="formTitle">
+            Add Transaction
+          </h2>
+
+          <p id="formSubtitle">
+            Record your income or expense.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <form
+        class="form"
+        id="entryForm"
+      >
+
+
+        <!-- Date -->
+
+        <div class="form-group">
+
+          <label for="date">
+            Date
+          </label>
+
+          <input
+            id="date"
+            type="date"
+            required
+          >
+
+        </div>
+
+
+        <!-- Description -->
+
+        <div class="form-group">
+
+          <label for="description">
+            Description
+          </label>
+
+          <input
+            id="description"
+            type="text"
+            placeholder="e.g. Groceries"
+            maxlength="120"
+            required
+          >
+
+        </div>
+        <!-- Category -->
+
+        <div class="form-group">
+
+          <label for="category">
+            Category
+          </label>
+
+
+          <select
+            id="category"
+            required
+          >
+
+            <option value="">
+              Select category
+            </option>
+
+            <option value="Food">
+              Food
+            </option>
+
+            <option value="Transport">
+              Transport
+            </option>
+
+            <option value="Bills">
+              Bills
+            </option>
+
+            <option value="Shopping">
+              Shopping
+            </option>
+
+            <option value="Entertainment">
+              Entertainment
+            </option>
+
+            <option value="Health">
+              Health
+            </option>
+
+            <option value="Education">
+              Education
+            </option>
+
+            <option value="Other">
+              Other
+            </option>
+
+            <option value="__custom__">
+              + Create new category
+            </option>
+
+          </select>
+
+
+          <!-- Custom category -->
+
+          <div
+            id="newCategoryBox"
+            class="new-category-box"
+            hidden
+          >
+
+            <input
+              type="text"
+              id="customCategory"
+              placeholder="Enter your category"
+              maxlength="60"
+            >
+
+
+            <button
+              type="button"
+              id="createCategoryButton"
+              class="secondary"
+            >
+              Create
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- Type -->
+
+        <div class="form-group">
+
+          <label for="type">
+            Type
+          </label>
+
+          <select
+            id="type"
+            required
+          >
+
+            <option value="expense">
+              Expense
+            </option>
+
+            <option value="income">
+              Income
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- Amount -->
+
+        <div class="form-group">
+
+          <label for="amount">
+            Amount
+          </label>
+
+          <input
+            id="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            inputmode="decimal"
+            placeholder="0.00"
+            required
+          >
+
+        </div>
+
+
+        <!-- Buttons -->
+
+        <div class="add-field">
+
+          <button
+            class="primary"
+            type="submit"
+            id="submitButton"
+          >
+            Add Transaction
+          </button>
+
+
+          <button
+            class="secondary"
+            type="button"
+            id="cancelButton"
+            hidden
+          >
+            Cancel
+          </button>
+
+        </div>
+
+
+      </form>
+
+    </section>
+
+
+    <!-- =========================
+         Transactions
+    ========================== -->
+
+    <section class="panel">
+
+
+      <div class="panel-header">
+
+        <div>
+
+          <h2>
+            Transactions
+          </h2>
+
+          <p id="transactionPeriodSubtitle">
+            Transactions for the selected financial period.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <div class="table-wrap">
+
+
+        <table>
+
+          <thead>
+
+            <tr>
+
+              <th>
+                Date
+              </th>
+
+              <th>
+                Description
+              </th>
+
+              <th>
+                Category
+              </th>
+
+              <th>
+                Income
+              </th>
+
+              <th>
+                Expense
+              </th>
+
+              <th>
+                Balance
+              </th>
+
+              <th>
+                Action
+              </th>
+
+            </tr>
+
+          </thead>
+
+
+          <tbody id="ledger"></tbody>
+
+
+        </table>
+
+
+        <div
+          class="empty"
+          id="empty"
+        >
+
+          No transactions yet.
+
+          <br>
+
+          Add your first transaction above.
+
+        </div>
+
+
+      </div>
+
+    </section>
+
+
+  </div>
+
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <a href="dashboard.html" class="nav-item active" aria-current="page"><span class="nav-icon">⌂</span><span>Dashboard</span></a>
+    <a href="projects.html" class="nav-item"><span class="nav-icon">▦</span><span>Projects</span></a>
+    <a href="notes.html" class="nav-item"><span class="nav-icon">▤</span><span>Notes</span></a>
+    <a href="charts.html" class="nav-item"><span class="nav-icon">▥</span><span>Charts</span></a>
+  </nav>
+
+  <!-- =========================
+       Supabase
+  ========================== -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script src="js/supabase.js"></script>
+
+  <script src="js/utils.js"></script>
+
+  <script src="js/storage.js"></script>
+  <script src="js/offline.js"></script>
+  <script src="js/dashboard.js"></script>
+
+</body>
+
+</html>
